@@ -15,7 +15,7 @@ func (r *HomeRouter) Get() {
 	if r.Data == nil {
 		r.Data = make(renders.T)
 	}
-	r.Data["title"] = "query lottery db"
+	r.Data["title"] = "大乐透筛选"
 	r.Tpl = "home.html"
 
 	r.Render(r.Tpl, r.Data)
