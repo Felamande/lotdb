@@ -1,0 +1,128 @@
+{%template "base.html" . %}
+
+<body>
+
+    <style>
+        th.result-n {
+            font-size: 150%
+        }
+        
+        .del-transition {
+            transition: all .8s ease;
+        }
+        
+        .pagination li,
+        .pagination a {
+            cursor: pointer;
+        }
+        
+        .red {
+            color: red
+        }
+        
+        button {
+            outline-style: none;
+        }
+    </style>
+
+    <div class="container">
+        <tabset>
+            <tab header="和值">
+                <form action="/query" method="POST" id="query" class="form-horizontal">
+
+                    <label id="sum-input-label" for="sum-input" class="control-label">和值为:</label>
+
+                    <input class="form-control" v-model="sum" type=number name="sum" id="sum-input" max="{{maxSum}}" min="{{minSum}}" number>
+
+                </form>
+                <button id="show-filters" @click="showFilters=true" class="btn btn-primary" style="margin-top:5px;margin-right:10px;">添加数字筛选条件</button>
+                <button id="show-delete" @click="showDeleted=true" class="btn btn-primary" style="margin-top:5px;margin-right:10px;">显示删除的结果</button>
+                <button type="button" class="btn btn-danger" @click='postFilter' style="margin-top:5px;">提交筛选</button>
+                <form v-if="sum!=0||filterByType.include.length!=0||filterByType.exclude.length!=0" class="form-horizontal" style="margin-top:4px;">
+                    <label class="control-label">筛选条件:</label>
+                    <h3 style="font-size:16px;margin-top:3px!important;">和值为&nbsp<code>{{sum}}</code>
+                    {{filterByType.include.length!=0?"&nbsp;含有&nbsp;":""}}<code v-for="f in filterByType.include">{{f}}&nbsp;</code>
+                    {{filterByType.exclude.length!=0?"&nbsp;排除&nbsp;":""}}<code v-for="f in filterByType.exclude">{{f}}&nbsp;</code>
+                    </h3>
+                </form>
+                <form class="form-horizontal" style="margin-top:5px;">
+                    <label class="control-label">筛选结果:<code v-if="results.length!=0">一共{{results.length}}个</code></label>
+                </form>
+                <table class="table table-hover table-condensed" style="margin-top:2px;">
+                    <tbody>
+
+                        <tr v-for="re in curPageSlice">
+                            <th v-for="n in re" class="result-n" scope="row" v-highlight="n" transition="del">{{n}}</th>
+                            <th>
+                                <button class="btn btn-danger" @click="remResult(re)">删除</button>
+                            </th>
+                        </tr>
+                    </tbody>
+                </table>
+                <ul class="pagination" v-if="results.length!=0">
+                    <li @click="setPageSlice(curPageIdx-1)" v-if="curPageIdx!=0"><a>上一页</a></li>
+                    <li v-for="idx in maxPageIdx" @click="setPageSlice(idx)" class="{{curPageIdx==idx?'active':''}}"><a>{{idx+1}}</a></li>
+                    <li @click="setPageSlice(curPageIdx+1)" v-if="curPageIdx!=maxPageIdx-1"><a>下一页</a></li>
+                </ul>
+
+
+                <modal title="被删除的结果" :show.sync="showDeleted" effect="fade">
+                    <div slot="modal-body" class="modal-body">
+
+                        <table class="table table-hover table-condensed" v-if="deleted.length!=0">
+                            <tbody>
+                                <tr v-for="re in deleted">
+                                    <th v-for="n in re" v-highlight="n" scope="row" class="result-n" transition="del">{{n}}</th>
+                                    <!--<th>
+                                <button class="btn btn-info" @click="addDeletedResult(re)">重新添加</button>
+                            </th>-->
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div slot="modal-footer" class="modal-footer">
+                        <button type="button" class="btn btn-primary" @click='showDeleted=false'>关闭</button>
+                    </div>
+                </modal>
+                <modal title="添加筛选条件" :show.sync="showFilters" effect="fade">
+                    <div slot="modal-body" class="modal-body">
+                        <form action="/query" method="POST" id="query" class="form-horizontal">
+
+                            <label id="sum-input-label" for="sum-input" class="control-label">和值为:</label>
+
+                            <input class="form-control" v-model="sum" type=number name="sum" id="sum-input" max="{{maxSum}}" min="{{minSum}}" number>
+
+                        </form>
+                        <label class="control-label" style="margin-top:5px;">筛选数字:</label>
+                        <div class="row" v-for="filter in filters" style="margin-top:3px;">
+                            <div class="col-md-2 col-xs-2">
+                                <vselect placeholder="条件" select="filter" :value.sync="filter.type">
+                                    <voption value="include" seleted>含有</voption>
+                                    <voption value="exclude">排除</voption>
+                                </vselect>
+                            </div>
+                            <div class="col-md-7 col-xs-5 col-xs-offset-1">
+                                <input class="form-control" placeholder="输入数字" type=number v-model="filter.value" number>
+                            </div>
+                            <button class="btn btn-warning col-md-1 col-xs-2" @click="remFilter(filter)">删除</button>
+                        </div>
+
+                        <div class="row" v-if="debug">{{filters|json}}</div>
+                        <div class="row" v-if="debug">{{queryParams|json}}</div>
+                        <button class="btn btn-primary btn-block" style="margin-top:10px;" @click="addFilter">添加筛选项</button>
+                    </div>
+
+                    <div slot="modal-footer" class="modal-footer">
+
+                        <button type="button" class="btn btn-danger btn-block" @click='postFilter'>提交筛选</button>
+
+                    </div>
+                </modal>
+            </tab>
+            <!--<tab header="奇偶"></tab>-->
+        </tabset>
+    </div>
+
+</body>
+
+</html>
