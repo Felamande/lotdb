@@ -51,7 +51,7 @@
                 <table class="table table-hover table-condensed" style="margin-top:2px;">
                     <tbody>
 
-                        <tr v-for="re in curPageSlice">
+                        <tr v-for="re in currPageSlice">
                             <th v-for="n in re" class="result-n" scope="row" v-highlight="n" transition="del">{{n}}</th>
                             <th>
                                 <button class="btn btn-danger" @click="remResult(re)">删除</button>
@@ -60,9 +60,10 @@
                     </tbody>
                 </table>
                 <ul class="pagination" v-if="results.length!=0">
-                    <li @click="setPageSlice(curPageIdx-1)" v-if="curPageIdx!=0"><a>上一页</a></li>
-                    <li v-for="idx in maxPageIdx" @click="setPageSlice(idx)" class="{{curPageIdx==idx?'active':''}}"><a>{{idx+1}}</a></li>
-                    <li @click="setPageSlice(curPageIdx+1)" v-if="curPageIdx!=maxPageIdx-1"><a>下一页</a></li>
+                   
+                     <li @click="curPageIdx--" v-if="curPageIdx!=0"><a>上一页</a></li>
+                    <li v-for="idx in maxPageIdx" @click="curPageIdx = idx" class="{{curPageIdx==idx?'active':''}}"><a>{{idx+1}}</a></li>
+                    <li @click="curPageIdx++" v-if="curPageIdx!=maxPageIdx-1"><a>下一页</a></li>
                 </ul>
 
 
