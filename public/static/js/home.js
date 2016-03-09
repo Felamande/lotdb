@@ -3,17 +3,6 @@ window.onload = function() {
 	Vue.use(VueResource)
 
 	Vue.transition('del', {})
-	Vue.directive("highlight", function(value) {
-		var filters = this.vm.$data.filters
-		if (!filters) {
-			return
-		}
-		for (i in filters) {
-			if (value == filters[i].value) {
-				Vue.util.addClass(this.el, "red")
-			}
-		}
-	})
 	window.vm = new Vue({
 		el: ".container",
 		data: {
@@ -59,7 +48,7 @@ window.onload = function() {
 							this.errMsg = "找不到满足条件的结果"
 						} else {
 							this.$set("results", data.re)
-							this.setPageSlice(0)
+							
 							this.errMsg = ""
 						}
 						this.firstRun = false
@@ -69,7 +58,7 @@ window.onload = function() {
 			},
 			remResult: function(re) {
 				this.results.$remove(re)
-				this.curPageSlice.$remove(re)
+				// this.curPageSlice.$remove(re)
 				this.deleted.push(re)
 			},
 			addDeletedResult: function(re) {
@@ -81,22 +70,14 @@ window.onload = function() {
 			},
 			addFilter: function() {
 				this.filters.push({})
-			},
-
-			highlight: function(n) {
-				for (i in this.filters) {
-					if (value == this.filters[i].value) {
-						return "red"
-					}
-				}
 			}
-
 		},
 		computed: {
 			queryParams: function() {
 				var data = {}
 				data["sum"] = this.sum
-				data["filters"] = this.filters
+				data["include"] = this.filterByType.include
+                data["exclude"] = this.filterByType.exclude
 				return data
 			},
 			maxPageIdx: function() {
@@ -104,11 +85,17 @@ window.onload = function() {
 			},
 			filterByType: function() {
 				var fbt = { exclude: [], include: [] }
+                
 				for (i in this.filters) {
-
-
-					if (this.filters[i].value == 0 || !this.filters[i].type) continue;
-					fbt[this.filters[i].type].push(this.filters[i].value)
+                    filter = this.filters[i]
+                    switch(filter.type){
+                        case "include":
+                            fbt.include.push(filter.value)
+                        case "exclude":
+                            for(i = filter.start;i<=filter.end;i++){
+                                fbt.exclude.push(i)
+                            }
+                    }
 				}
 				return fbt
 			},

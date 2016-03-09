@@ -1,14 +1,7 @@
 package models
 
 type QueryForm struct {
-	Sum     int      `form:"sum" json:"sum"`
-	Filters []Filter `form:"filters" json:"filters"`
+	Sum     int   `form:"sum" json:"sum"`
+	Include []int `form:"include" json:"include"`
+	Exclude []int `form:"exclude" json:"exclude"`
 }
-
-type Filter struct {
-	Type  string `form:"type" json:"type"`
-	Value int    `form:"value" json:"value"`
-}
-
-const typeExclude = "exclude"
-const typeInclude = "include"
