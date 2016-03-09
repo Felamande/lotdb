@@ -23,9 +23,11 @@
         button {
             outline-style: none;
         }
+        
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
         }
+        
         input::-webkit-outer-spin-button {
             -webkit-appearance: none;
         }
@@ -108,16 +110,18 @@
                                     <!--<voption value="range">排除-->
                                 </vselect>
                             </div>
-                            <div class="col-md-2 col-xs-3" style="margin-left:15px!important">
-                                <input class="form-control" style="padding-left:3px!important;" type=number v-model="filter.value" number>
-                                
+                            <div id="exclude-item" v-if="filter.type=='exclude'">
+                                <div class="col-md-2 col-xs-3" style="margin-left:15px!important">
+                                    <input class="form-control" style="padding-left:3px!important;" type=number v-model="filter.value" number>
+
+                                </div>
+                                <div class="col-md-1 col-xs-1" style="height:34px;padding-top:4px;font-size:14px;padding-left:0px;padding-right:0px;width:15px;">到</div>
+                                <div class="col-md-2 col-xs-3" style="margin-left:0px!important">
+                                    <input class="form-control" style="padding-left:3px!important;" type=number v-model="filter.value" number>
+
+                                </div>
+                                <button class="btn btn-warning col-md-1 col-xs-2" @click="remFilter(filter)">删除</button>
                             </div>
-                            <div class="col-md-1 col-xs-1" style="height:34px;padding-top:4px;font-size:14px;padding-left:0px;padding-right:0px;width:15px;">到</div>
-                             <div class="col-md-2 col-xs-3" style="margin-left:0px!important">
-                                <input class="form-control" style="padding-left:3px!important;" type=number v-model="filter.value" number>
-                                
-                            </div>
-                            <button class="btn btn-warning col-md-1 col-xs-2" @click="remFilter(filter)">删除</button>
                         </div>
 
                         <div class="row" v-if="debug">{{filters|json}}</div>
