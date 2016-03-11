@@ -6,7 +6,6 @@ import (
 )
 
 type BaseJSONRouter struct {
-	tango.Log
 	tango.Json
 	tango.Ctx
 	JSON map[string]interface{}
@@ -23,7 +22,7 @@ func (r *BaseJSONRouter) After() {
 type BaseTplRouter struct {
 	tango.Compress
 	tango.Ctx
-	tango.Log
+
 	renders.Renderer
 	Tpl  string
 	Data renders.T

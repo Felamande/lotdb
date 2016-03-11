@@ -31,7 +31,6 @@ func (r *QueryRouter) Post() interface{} {
 	if _, exist := r.JSON["err"]; exist {
 		return r.JSON
 	}
-	r.Logger.Info(r.Form, r.Header().Get("Content-Type"))
 
 	if r.Errors.Len() != 0 {
 		r.JSON["err"] = r.Errors[0].Error()
@@ -45,7 +44,7 @@ func (r *QueryRouter) Post() interface{} {
 		if dberr, ok := err.(models.DatabaseError); ok {
 			r.JSON["err"] = "database error."
 			r.JSON["sucess"] = false
-			go r.Logger.Error(dberr)
+			r.Logger.Error(dberr)
 			return r.JSON
 		}
 		r.JSON["err"] = err.Error()
@@ -55,6 +54,6 @@ func (r *QueryRouter) Post() interface{} {
 
 	r.JSON["re"] = re
 	r.JSON["success"] = true
-
+	r.Logger.Info("sum:", r.Form.Sum, "include:", r.Form.Include, "exclude:", r.Form.Exclude, "result:", len(re))
 	return r.JSON
 }

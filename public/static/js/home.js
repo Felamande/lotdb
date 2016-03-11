@@ -1,8 +1,6 @@
 window.onload = function() {
 
 	Vue.use(VueResource)
-
-	Vue.transition('del', {})
 	window.vm = new Vue({
 		el: ".container",
 		data: {
@@ -40,15 +38,12 @@ window.onload = function() {
 						data = response.data
 						if (!data.success) {
 							this.results = []
-
 							this.errMsg = data.err
 						} else if (data.re == null || data.re.length == 0) {
 							this.results = []
-
 							this.errMsg = "找不到满足条件的结果"
 						} else {
 							this.$set("results", data.re)
-							
 							this.errMsg = ""
 						}
 						this.firstRun = false

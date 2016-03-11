@@ -28,7 +28,14 @@ func main() {
 		RootPath: settings.Static.LocalRoot,
 	}))
 	t.Use(binding.Bind())
-	t.Use(tango.ClassicHandlers...)
+	t.Use(
+		tango.Recovery(false),
+		tango.Compresses([]string{}),
+		tango.Static(tango.StaticOptions{Prefix: "public"}),
+		tango.Return(),
+		tango.Param(),
+		tango.Contexts(),
+	)
 	t.Use(renders.New(renders.Options{
 		Reload:      settings.Template.Reload,
 		Directory:   settings.Template.Home,
