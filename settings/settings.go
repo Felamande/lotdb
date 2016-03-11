@@ -1,8 +1,10 @@
 package settings
 
 import (
+	"fmt"
 	"io/ioutil"
 	"sync"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/kardianos/osext"
@@ -42,15 +44,21 @@ type dbCfg struct {
 	Type string
 	Uri  string
 }
+type timeCfg struct {
+	ZoneString string         `toml:"zone"`
+	Location   *time.Location `toml:"-"`
+}
 
 type setting struct {
-	Static      staticCfg   `toml:"static"`
-	Server      serverCfg   `toml:"server"`
-	DB          dbCfg       `toml:"database"`
-	Template    templateCfg `toml:"template"`
-	DefaultVars defaultVar  `toml:"defaultvars"`
-	Admin       adminCfg    `toml:"admin"`
-	Log         logCfg      `toml:"log"`
+	Static      staticCfg         `toml:"static"`
+	Server      serverCfg         `toml:"server"`
+	DB          dbCfg             `toml:"database"`
+	Template    templateCfg       `toml:"template"`
+	DefaultVars defaultVar        `toml:"defaultvars"`
+	Admin       adminCfg          `toml:"admin"`
+	Log         logCfg            `toml:"log"`
+	Time        timeCfg           `toml:"time"`
+	Headers     map[string]string `toml:"headers"`
 }
 
 var (
@@ -66,6 +74,8 @@ var (
 	Admin       adminCfg
 	Log         logCfg
 	DB          dbCfg
+	Time        timeCfg
+	Headers     map[string]string
 )
 
 var lock = new(sync.Mutex)
@@ -81,23 +91,32 @@ func init() {
 }
 
 func Init(cfgFile string) {
-	InitOnce.Do(func() {
-		b, err := ioutil.ReadFile(cfgFile)
-		if err != nil {
-			panic(err)
-		}
-		toml.Unmarshal(b, settingStruct)
+	// InitOnce.Do(func() {
+	b, err := ioutil.ReadFile(cfgFile)
+	if err != nil {
+		panic(err)
+	}
+	if err := toml.Unmarshal(b, settingStruct); err != nil {
+		panic(err)
+	}
+	settingStruct.Time.Location, err = time.LoadLocation(settingStruct.Time.ZoneString)
+	if err != nil {
+		fmt.Println(err)
+		settingStruct.Time.Location = time.UTC
+	}
 
-		Static = settingStruct.Static
-		Server = settingStruct.Server
+	Static = settingStruct.Static
+	Server = settingStruct.Server
 
-		Template = settingStruct.Template
-		DefaultVars = settingStruct.DefaultVars
-		Admin = settingStruct.Admin
-		Log = settingStruct.Log
-		DB = settingStruct.DB
+	Template = settingStruct.Template
+	DefaultVars = settingStruct.DefaultVars
+	Admin = settingStruct.Admin
+	Log = settingStruct.Log
+	DB = settingStruct.DB
+	Time = settingStruct.Time
+	Headers = settingStruct.Headers
 
-	})
+	// })
 
 	IsInit = true
 }
