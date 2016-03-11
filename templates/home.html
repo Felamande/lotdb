@@ -45,7 +45,8 @@
 
 				</form>
 				<button id="show-filters" @click="showFilters=true" class="btn btn-primary" style="margin-top:5px;margin-right:10px;">添加数字筛选条件</button>
-				<button id="show-delete" @click="showDeleted=true" class="btn btn-primary" style="margin-top:5px;margin-right:10px;">显示删除的结果</button>
+				
+                <button id="deleteAllFilters" @click="delAllFilters" class="btn btn-warning" style="margin-top:5px;margin-right:10px;">清除数字筛选条件</button>
 				<button type="button" class="btn btn-danger" @click='postFilter' style="margin-top:5px;">提交筛选</button>
 				<form v-if="sum!=0||filterByType.include.length!=0||filterByType.exclude.length!=0" class="form-horizontal" style="margin-top:4px;">
 					<label class="control-label">筛选条件:</label>
@@ -55,8 +56,11 @@
 					</h3>
 				</form>
 				<form class="form-horizontal" style="margin-top:5px;">
-					<label class="control-label">筛选结果:<code v-if="results.length!=0">一共{{results.length}}个</code></label>
+					<label class="control-label">筛选结果:<code v-if="results.length!=0">一共{{results.length}}个</code>
+                    
+                    </label>
 				</form>
+                <button id="show-delete" @click="showDeleted=true" class="btn btn-primary" style="margin-top:5px;margin-right:10px;">显示删除的结果</button>
 				<table class="table table-hover table-condensed" style="margin-top:2px;">
 					<tbody>
 

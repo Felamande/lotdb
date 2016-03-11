@@ -65,7 +65,10 @@ window.onload = function() {
 			},
 			addFilter: function() {
 				this.filters.push({})
-			}
+			},
+            delAllFilters:function(){
+                this.filters = [{}]
+            }
 		},
 		computed: {
 			queryParams: function() {
