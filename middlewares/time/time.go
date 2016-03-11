@@ -17,9 +17,9 @@ func (h *TimeHandler) Handle(ctx *tango.Context) {
 	// ctx.Logger.Info(ctx.Header())
 	ctx.Next()
 	ctx.Logger.Infof("Completed %v %v %v in %v for %v %v",
+		ctx.Status(),
 		ctx.Req().Method,
 		ctx.Req().URL.Path,
-		ctx.Status(),
 		time.Since(t1),
 		ctx.Req().RemoteAddr,
 		uaRegexp.FindAllString(ctx.Req().Header.Get("User-Agent"), -1),
