@@ -42,7 +42,10 @@ func Init(file string) {
 }
 
 func get(val string) *result {
+	lock.Lock()
 	value, err := vm.Get(val)
+	lock.Unlock()
+
 	return &result{value, err}
 }
 
@@ -50,16 +53,17 @@ func (r *result) get(val string) *result {
 	if !r.value.IsObject() {
 		return r
 	}
+
 	value, err := r.value.Object().Get(val)
+
 	return &result{value, err}
 }
 
 func Get(path string) *result {
-	lock.Lock()
-	defer lock.Unlock()
 
 	vals := strings.Split(path, ".")
 	r := get(vals[0])
+
 	for _, val := range vals[1:] {
 		r = r.get(val)
 	}
@@ -80,6 +84,7 @@ func (r *result) Bool(Default bool) bool {
 	}
 
 	b, err := r.value.ToBoolean()
+
 	if err != nil {
 		return Default
 	}
@@ -112,7 +117,7 @@ func (r *result) Float(Default float64) float64 {
 	return f
 }
 
-func (r *result) ForEach(foreach func(key string, val otto.Value)) {
+func (r *result) ForEach(foreach func(key string, val interface{})) {
 	if r.err != nil || !r.value.IsObject() {
 		return
 	}
@@ -124,8 +129,8 @@ func (r *result) ForEach(foreach func(key string, val otto.Value)) {
 		if err != nil {
 			continue
 		}
-
-		foreach(key, value)
+		v, _ := value.Export()
+		foreach(key, v)
 
 	}
 }
