@@ -13,16 +13,17 @@ func GetQueryResults(form QueryForm) ([][]int, error) {
 	if sumOutOfRange(sum) {
 		return nil, errors.New("没有该和值")
 	}
+	dbtype, uri := settings.Get("database.type").String("sqlite3"), settings.Get("database.uri").String("./resource/db/lottery.2.sqlite3")
 
-	q, err := query.Connect(settings.DB.Type, settings.DB.Uri)
+	q, err := query.Connect(dbtype, uri)
 	if err != nil {
 		fmt.Println(err)
-		return nil, DatabaseError{settings.DB.Uri, err}
+		return nil, DatabaseError{uri, err}
 	}
 
 	result, err := q.Sum(form.Sum).Include(form.Include...).Exclude(form.Exclude...).Result()
 	if err != nil {
-		return nil, DatabaseError{settings.DB.Uri, err}
+		return nil, DatabaseError{uri, err}
 	}
 
 	return result, nil

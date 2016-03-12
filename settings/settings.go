@@ -1,130 +1,186 @@
 package settings
 
 import (
-	"fmt"
 	"io/ioutil"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/BurntSushi/toml"
-	"github.com/kardianos/osext"
+	"github.com/robertkrimen/otto"
+	"gopkg.in/fsnotify.v1"
 )
 
-type staticCfg struct {
-	VirtualRoot string `toml:"vstatic"`
-	LocalRoot   string `toml:"lstatic"`
-	CompressDef string `toml:"compress"`
-}
+var vm *otto.Otto
+var confFile string
 
-type serverCfg struct {
-	Port string `toml:"port"`
-	Host string `toml:"host"`
-}
-
-type templateCfg struct {
-	Home         string `toml:"home"`
-	DelimesLeft  string `toml:"ldelime"`
-	DelimesRight string `toml:"rdelime"`
-	Charset      string `toml:"charset"`
-	Reload       bool   `toml:"reload"`
-}
-type defaultVar struct {
-	AppName string `toml:"appname"`
-}
-
-type adminCfg struct {
-	Passwd string `toml:"passwd"`
-}
-
-type logCfg struct {
-	Path   string `toml:"path"`
-	Format string `toml:"format"`
-}
-type dbCfg struct {
-	Type string
-	Uri  string
-}
-type timeCfg struct {
-	ZoneString string         `toml:"zone"`
-	Location   *time.Location `toml:"-"`
-}
-
-type tlsCfg struct {
-	Use  bool   `toml:"use"`
-	Cert string `toml:"cert"`
-	Key  string `toml:key`
-}
-
-type setting struct {
-	Static      staticCfg         `toml:"static"`
-	Server      serverCfg         `toml:"server"`
-	DB          dbCfg             `toml:"database"`
-	Template    templateCfg       `toml:"template"`
-	DefaultVars defaultVar        `toml:"defaultvars"`
-	Admin       adminCfg          `toml:"admin"`
-	Log         logCfg            `toml:"log"`
-	Time        timeCfg           `toml:"time"`
-	Tls         tlsCfg            `toml:"tls"`
-	Headers     map[string]string `toml:"headers"`
-}
-
-var (
-	Folder        string
-	settingStruct = new(setting)
-	IsInit        = false
-
-	//GlobalSettings
-	Static      staticCfg
-	Server      serverCfg
-	Template    templateCfg
-	DefaultVars defaultVar
-	Admin       adminCfg
-	Log         logCfg
-	DB          dbCfg
-	Tls         tlsCfg
-	Time        timeCfg
-	Headers     map[string]string
-)
-
+// var file = flag.String("-conf", "./settings/settings.js", "config file path, is a javascript file.")
 var lock = new(sync.Mutex)
-var InitOnce = new(sync.Once)
 
-func init() {
-	var err error
-	Folder, err = osext.ExecutableFolder()
-	if err != nil {
-		panic(err)
-	}
-
+type result struct {
+	value otto.Value
+	err   error
 }
 
-func Init(cfgFile string) {
+func Init(file string) {
+
 	// InitOnce.Do(func() {
-	b, err := ioutil.ReadFile(cfgFile)
+
+	vm = otto.New()
+
+	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
-	if err := toml.Unmarshal(b, settingStruct); err != nil {
+
+	_, err = vm.Run(string(b))
+	if err != nil {
 		panic(err)
 	}
-	settingStruct.Time.Location, err = time.LoadLocation(settingStruct.Time.ZoneString)
-	if err != nil {
-		fmt.Println(err)
-		settingStruct.Time.Location = time.UTC
-	}
-
-	Static = settingStruct.Static
-	Server = settingStruct.Server
-
-	Template = settingStruct.Template
-	DefaultVars = settingStruct.DefaultVars
-	Admin = settingStruct.Admin
-	Log = settingStruct.Log
-	DB = settingStruct.DB
-	Time = settingStruct.Time
-	Headers = settingStruct.Headers
-	Tls = settingStruct.Tls
+	confFile = file
 	// })
 
-	IsInit = true
+}
+
+func get(val string) *result {
+	value, err := vm.Get(val)
+	return &result{value, err}
+}
+
+func (r *result) get(val string) *result {
+	if !r.value.IsObject() {
+		return r
+	}
+	value, err := r.value.Object().Get(val)
+	return &result{value, err}
+}
+
+func Get(path string) *result {
+	lock.Lock()
+	defer lock.Unlock()
+
+	vals := strings.Split(path, ".")
+	r := get(vals[0])
+	for _, val := range vals[1:] {
+		r = r.get(val)
+	}
+	return r
+}
+
+func (r *result) String(Default string) string {
+	if r.err != nil || r.value.IsUndefined() || !r.value.IsString() {
+		return Default
+	}
+
+	return r.value.String()
+}
+
+func (r *result) Bool(Default bool) bool {
+	if r.err != nil || r.value.IsUndefined() || !r.value.IsBoolean() {
+		return Default
+	}
+
+	b, err := r.value.ToBoolean()
+	if err != nil {
+		return Default
+	}
+	return b
+}
+
+func (r *result) Int(Default int) int {
+	if r.err != nil || r.value.IsUndefined() || !r.value.IsNumber() {
+		return Default
+	}
+
+	i, err := r.value.ToInteger()
+	if err != nil {
+		return Default
+	}
+
+	return int(i)
+}
+
+func (r *result) Float(Default float64) float64 {
+	if r.err != nil || r.value.IsUndefined() || !r.value.IsNumber() {
+		return Default
+	}
+
+	f, err := r.value.ToFloat()
+	if err != nil {
+		return Default
+	}
+
+	return f
+}
+
+func (r *result) ForEach(foreach func(key string, val otto.Value)) {
+	if r.err != nil || !r.value.IsObject() {
+		return
+	}
+
+	o := r.value.Object()
+	keys := o.Keys()
+	for _, key := range keys {
+		value, err := o.Get(key)
+		if err != nil {
+			continue
+		}
+
+		foreach(key, value)
+
+	}
+}
+
+func Location() *time.Location {
+	loc := Get("time.zone").String("Hongkong")
+	loca, err := time.LoadLocation(loc)
+	if err != nil {
+		loca = time.UTC
+	}
+	return loca
+}
+
+func MustWatch(file string) {
+	if err := watch(file); err != nil {
+		panic(err)
+	}
+}
+
+func Watch(file string) error {
+	return watch(file)
+}
+
+func watch(file string) error {
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	err = w.Add(file)
+	if err != nil {
+		return err
+	}
+	for {
+		select {
+		case e := <-w.Events:
+			if e.Op == fsnotify.Remove || e.Op == fsnotify.Rename || e.Op == fsnotify.Chmod {
+				continue
+			}
+			reload(file)
+
+		}
+	}
+}
+
+func reload(file string) error {
+	lock.Lock()
+	defer lock.Unlock()
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	_, err = vm.Run(string(b))
+	if err != nil {
+		return err
+	}
+	return nil
 }

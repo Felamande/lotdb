@@ -9,12 +9,12 @@ import (
 )
 
 func AssetJS(src string) template.HTML {
-	return template.HTML(fmt.Sprintf(`<script src="%s"></script>`, path.Join(settings.Static.VirtualRoot, "js", src)))
+	return template.HTML(fmt.Sprintf(`<script src="%s"></script>`, path.Join(settings.Get("static.virtual").String("/static/"), "js", src)))
 	// return path.Join(settings.Static.VirtualRoot, "js", src)
 }
 
 func AssetCss(src string) template.HTML {
-	return template.HTML(fmt.Sprintf(`<link rel="stylesheet" href="%s" type="text/css" />`, path.Join(settings.Static.VirtualRoot, "css", src)))
+	return template.HTML(fmt.Sprintf(`<link rel="stylesheet" href="%s" type="text/css" />`, path.Join(settings.Get("static.virtual").String("/static/"), "css", src)))
 }
 
 func DefaultFuncs() template.FuncMap {
