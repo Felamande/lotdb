@@ -3,16 +3,15 @@ package query
 import (
 	"strconv"
 
-	"github.com/Felamande/lotdb/settings"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3" //init sqlite3
 
 	_ "github.com/go-sql-driver/mysql" //init mysql
+	_ "github.com/lib/pq"
 )
 
 type query struct {
-	db   *gorm.DB
-	errs []error
+	db *gorm.DB
 }
 
 func Connect(dialect string, args ...interface{}) (*query, error) {
@@ -21,23 +20,17 @@ func Connect(dialect string, args ...interface{}) (*query, error) {
 		return nil, err
 	}
 	db = db.Select("n1,n2,n3,n4,n5")
-	return &query{db, []error{}}, nil
+	return &query{db}, nil
 
 }
 
 func (q *query) Sum(sum int) *query {
-	if len(q.errs) != 0 {
-		return q
-	}
-
 	q.db = q.db.Table("sum" + strconv.Itoa(sum))
 	return q
 }
 
 func (q *query) Include(nums ...int) *query {
-	if len(q.errs) != 0 {
-		return q
-	}
+
 	for _, num := range nums {
 		if num == 0 {
 			continue
@@ -48,10 +41,6 @@ func (q *query) Include(nums ...int) *query {
 	return q
 }
 func (q *query) Exclude(nums ...int) *query {
-	if len(q.errs) != 0 {
-		return q
-	}
-
 	for _, num := range nums {
 		if filterValOutOfRange(num) {
 			continue
@@ -63,22 +52,15 @@ func (q *query) Exclude(nums ...int) *query {
 }
 
 func (q *query) If(exsit int, exclude ...int) *query {
-	if len(q.errs) != 0 {
-		return q
-	}
+
 	return q
 }
-func (q *query) Result() ([][]int, []error) {
+func (q *query) Result() ([][]int, error) {
 	defer q.db.Close()
-
-	if len(q.errs) != 0 {
-		return nil, q.errs
-	}
 	rows, err := q.db.Rows()
 
 	if err != nil {
-		q.errs = append(q.errs, DatabaseError{settings.DB.Uri, err})
-		return nil, q.errs
+		return nil, err
 	}
 
 	var results [][]int
