@@ -49,6 +49,12 @@ type timeCfg struct {
 	Location   *time.Location `toml:"-"`
 }
 
+type tlsCfg struct {
+	Use  bool   `toml:"use"`
+	Cert string `toml:"cert"`
+	Key  string `toml:key`
+}
+
 type setting struct {
 	Static      staticCfg         `toml:"static"`
 	Server      serverCfg         `toml:"server"`
@@ -58,6 +64,7 @@ type setting struct {
 	Admin       adminCfg          `toml:"admin"`
 	Log         logCfg            `toml:"log"`
 	Time        timeCfg           `toml:"time"`
+	Tls         tlsCfg            `toml:"tls"`
 	Headers     map[string]string `toml:"headers"`
 }
 
@@ -74,6 +81,7 @@ var (
 	Admin       adminCfg
 	Log         logCfg
 	DB          dbCfg
+	Tls         tlsCfg
 	Time        timeCfg
 	Headers     map[string]string
 )
@@ -115,7 +123,7 @@ func Init(cfgFile string) {
 	DB = settingStruct.DB
 	Time = settingStruct.Time
 	Headers = settingStruct.Headers
-
+	Tls = settingStruct.Tls
 	// })
 
 	IsInit = true

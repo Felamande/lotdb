@@ -57,6 +57,10 @@ func main() {
 
 	t.Post(query.Url, new(query.QueryRouter))
 	t.Get(page.HomeUrl, new(page.HomeRouter))
+	if settings.Tls.Use {
+		t.RunTLS(settings.Tls.Cert, settings.Tls.Key, settings.Server.Host)
+	} else {
+		t.Run(settings.Server.Host)
+	}
 
-	t.Run(settings.Server.Host)
 }

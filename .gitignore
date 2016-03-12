@@ -3,3 +3,4 @@ god.toml
 *.exe
 settings.toml
 settings_.toml
+tls
