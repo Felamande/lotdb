@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
+	_ "github.com/robertkrimen/otto/underscore" //register underscore
 	"gopkg.in/fsnotify.v1"
 )
 
 var vm *otto.Otto
 var confFile string
 
-// var file = flag.String("-conf", "./settings/settings.js", "config file path, is a javascript file.")
 var lock = new(sync.Mutex)
 
 type result struct {

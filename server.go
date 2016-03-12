@@ -61,8 +61,10 @@ func main() {
 
 	t.Post(query.Url, new(query.QueryRouter))
 	t.Get(page.HomeUrl, new(page.HomeRouter))
-	host := settings.Get("server.port").String(":9000")
+
 	go settings.MustWatch(*conf)
+
+	host := settings.Get("server.host").String(":9000")
 	if settings.Get("tls.use").Bool(false) {
 		t.RunTLS(settings.Get("tls.cert").String(""), settings.Get("tls.key").String(""), host)
 	} else {
