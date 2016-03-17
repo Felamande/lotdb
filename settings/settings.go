@@ -1,20 +1,24 @@
 package settings
 
 import (
-	"io/ioutil"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/robertkrimen/otto"
-	_ "github.com/robertkrimen/otto/underscore" //register underscore
+	"github.com/Felamande/lotdb/settings/jsvm"
+	"github.com/Felamande/otto"
+
+	//module
+	_ "github.com/Felamande/lotdb/settings/jsvm/module/gofunc"
+	_ "github.com/Felamande/lotdb/settings/jsvm/module/math"
+	_ "github.com/Felamande/lotdb/settings/jsvm/module/os"
+	_ "github.com/Felamande/lotdb/settings/jsvm/module/path"
+	_ "github.com/Felamande/lotdb/settings/jsvm/module/str"
+	_ "github.com/robertkrimen/otto/underscore"
+
 	"gopkg.in/fsnotify.v1"
 )
 
-var vm *otto.Otto
-var confFile string
-
-var lock = new(sync.Mutex)
+var lastReloadTime = time.Now()
 
 type result struct {
 	value otto.Value
@@ -22,30 +26,11 @@ type result struct {
 }
 
 func Init(file string) {
-
-	// InitOnce.Do(func() {
-
-	vm = otto.New()
-
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = vm.Run(string(b))
-	if err != nil {
-		panic(err)
-	}
-	confFile = file
-	// })
-
+	jsvm.Run(file)
 }
 
 func get(val string) *result {
-	lock.Lock()
-	value, err := vm.Get(val)
-	lock.Unlock()
-
+	value, err := jsvm.Vm().Get(val)
 	return &result{value, err}
 }
 
@@ -117,22 +102,20 @@ func (r *result) Float(Default float64) float64 {
 	return f
 }
 
-func (r *result) ForEach(foreach func(key string, val interface{})) {
+func (r *result) ForEach(foreach func(string, interface{})) {
 	if r.err != nil || !r.value.IsObject() {
 		return
 	}
 
 	o := r.value.Object()
-	keys := o.Keys()
-	for _, key := range keys {
+	o.ForEach(func(key string) {
 		value, err := o.Get(key)
 		if err != nil {
-			continue
+			return
 		}
 		v, _ := value.Export()
 		foreach(key, v)
-
-	}
+	})
 }
 
 func Location() *time.Location {
@@ -169,21 +152,17 @@ func watch(file string) error {
 			if e.Op == fsnotify.Remove || e.Op == fsnotify.Rename || e.Op == fsnotify.Chmod {
 				continue
 			}
+			if time.Now().Sub(lastReloadTime) < 3 {
+				continue
+			}
 			reload(file)
-
+			lastReloadTime = time.Now()
 		}
 	}
 }
 
 func reload(file string) error {
-	lock.Lock()
-	defer lock.Unlock()
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	_, err = vm.Run(string(b))
+	err := jsvm.Run(file)
 	if err != nil {
 		return err
 	}

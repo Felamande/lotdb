@@ -8,7 +8,6 @@ import (
 func CustomHeaders() tango.HandlerFunc {
 	return func(ctx *tango.Context) {
 		settings.Get("headers").ForEach(func(key string, value interface{}) {
-
 			ctx.Header().Set(key, value.(string))
 		})
 
