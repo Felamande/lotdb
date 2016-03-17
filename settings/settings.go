@@ -102,7 +102,7 @@ func (r *result) Float(Default float64) float64 {
 	return f
 }
 
-func (r *result) ForEach(foreach func(string, interface{})) {
+func (r *result) ForEach(foreach func(k string, v interface{}, err error)) {
 	if r.err != nil || !r.value.IsObject() {
 		return
 	}
@@ -111,10 +111,12 @@ func (r *result) ForEach(foreach func(string, interface{})) {
 	o.ForEach(func(key string) {
 		value, err := o.Get(key)
 		if err != nil {
+			foreach(key, value, err)
 			return
 		}
-		v, _ := value.Export()
-		foreach(key, v)
+		val, err := value.Export()
+		foreach(key, val, err)
+
 	})
 }
 

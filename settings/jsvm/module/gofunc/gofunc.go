@@ -27,3 +27,4 @@ func version(otto.FunctionCall) otto.Value {
 	v, _ := otto.ToValue(ver)
 	return v
 }
+

@@ -21,7 +21,7 @@ func init() {
 	p.Extend("readFileAsync", readFileAsync)
 	p.Extend("system", system)
 	p.Extend("getwd", getwd)
-	p.Extend("output", sysOutput)
+	// p.Extend("output", sysOutput)
 	p.Extend("writeFile", writeFile)
 }
 
@@ -81,9 +81,12 @@ func system(call otto.FunctionCall) otto.Value {
 	var cmdList []string
 
 	arg0 := call.Argument(0)
+	errCb := call.Argument(1)
+	outputCb := call.Argument(2)
 	iarg0, err := arg0.Export()
+
 	if err != nil {
-		return otto.UndefinedValue()
+		return callback(errCb, err.Error())
 	}
 
 	switch arg0t := iarg0.(type) {
@@ -92,59 +95,35 @@ func system(call otto.FunctionCall) otto.Value {
 	case string:
 		cmdList = strings.Split(arg0t, " ")
 	default:
-		return otto.UndefinedValue()
+		return callback(errCb, "invalid command line: "+arg0.String())
 	}
 
 	cmdLen := len(cmdList)
 	if cmdLen == 0 {
-		panic("no cmd")
+		return callback(errCb, "invalid command line: "+arg0.String())
 	}
 	c := exec.Command(cmdList[0], cmdList[1:]...)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
+	var isCb = false
+	buf := bytes.NewBuffer([]byte(""))
+	if outputCb.IsFunction() {
+
+		c.Stdout = buf
+		c.Stderr = buf
+		isCb = true
+	} else {
+
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+	}
+
 	err = c.Run()
 	if err != nil {
-		v, _ := otto.ToValue(err)
-		return v
+		return callback(errCb, err.Error())
 	}
-	return otto.TrueValue()
-}
-
-func sysOutput(call otto.FunctionCall) otto.Value {
-	var cmdList []string
-
-	arg0 := call.Argument(0)
-	iarg0, err := arg0.Export()
-	if err != nil {
-		v, _ := otto.ToValue("")
-		return v
+	if isCb {
+		return callback(outputCb, buf.String())
 	}
-
-	switch arg0t := iarg0.(type) {
-	case []string:
-		cmdList = arg0t
-	case string:
-		cmdList = strings.Split(arg0t, " ")
-	default:
-		v, _ := otto.ToValue("")
-		return v
-	}
-
-	cmdLen := len(cmdList)
-	if cmdLen == 0 {
-		panic("no cmd")
-	}
-	b := new(bytes.Buffer)
-	c := exec.Command(cmdList[0], cmdList[1:]...)
-	c.Stdout = b
-	c.Stderr = b
-	err = c.Run()
-	if err != nil {
-		v, _ := otto.ToValue("")
-		return v
-	}
-	v, _ := otto.ToValue(b.String())
-	return v
+	return otto.UndefinedValue()
 }
 
 //writeFile function writeFile(file,content,flag,errCb,formatter)
@@ -226,7 +205,7 @@ func cbGetValue(cb otto.Value, arg otto.Value) (string, error) {
 		return arg.String(), nil
 	}
 	if !cb.IsFunction() {
-		return "", errors.New("invalid formatter")
+		return "", errors.New("invalid function")
 	}
 	v, err := cb.Call(cb, arg)
 	if err != nil {
