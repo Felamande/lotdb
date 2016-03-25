@@ -1,6 +1,7 @@
 package jsvm
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -119,4 +120,36 @@ func Run(src interface{}) error {
 	}
 	_, err = vm.Run(string(b))
 	return err
+}
+
+func StringValue(s string) otto.Value {
+	v, _ := otto.ToValue(s)
+	return v
+}
+
+func ErrorValue(err error) otto.Value {
+	value, _ := otto.ToValue(err)
+	return value
+}
+
+func Callback(cb otto.Value, arg interface{}) otto.Value {
+	if cb.Class() != "Function" {
+		return otto.UndefinedValue()
+	}
+	cb.Call(cb, arg)
+	return otto.UndefinedValue()
+
+}
+func CbGetValue(cb otto.Value, arg otto.Value) (string, error) {
+	if cb.IsUndefined() {
+		return arg.String(), nil
+	}
+	if !cb.IsFunction() {
+		return "", errors.New("invalid formatter")
+	}
+	v, err := cb.Call(cb, arg)
+	if err != nil {
+		return "", err
+	}
+	return v.String(), nil
 }

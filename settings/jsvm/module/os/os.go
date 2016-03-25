@@ -2,7 +2,6 @@ package os
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"os"
 	// "errors"
@@ -21,24 +20,22 @@ func init() {
 	p.Extend("readFileAsync", readFileAsync)
 	p.Extend("system", system)
 	p.Extend("getwd", getwd)
-	p.Extend("output", sysOutput)
+	// p.Extend("output", sysOutput)
 	p.Extend("writeFile", writeFile)
 }
 
 func readFile(call otto.FunctionCall) otto.Value {
 
 	file, err := call.Argument(0).ToString()
+	errCb := call.Argument(1)
 	if err != nil {
-		e, _ := otto.ToValue(readError{err.Error()})
-		return e
+		return jsvm.Callback(errCb, "invalid file name "+file)
 	}
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		e, _ := otto.ToValue(readError{err.Error()})
-		return e
+		return jsvm.Callback(errCb, err.Error())
 	}
-	v, _ := otto.ToValue(string(b))
-	return v
+	return jsvm.StringValue(string(b))
 
 }
 
@@ -49,19 +46,20 @@ func readFileAsync(call otto.FunctionCall) otto.Value {
 
 	file := fileArg.String()
 	if !fileArg.IsString() {
-		return callback(errCb, "invalid file name "+file)
+		return jsvm.Callback(errCb, "invalid file name "+file)
 	}
 
 	f, err := os.Open(file)
 	if err != nil {
-		return callback(errCb, err.Error())
+		return jsvm.Callback(errCb, err.Error())
 	}
 
 	go func() {
 		defer f.Close()
 		buf := bytes.NewBuffer([]byte(""))
 		io.Copy(buf, f)
-		callback(contentCb, buf.String())
+		jsvm.Callback(contentCb, buf.String())
+		jsvm.Callback(errCb, nil)
 	}()
 	return otto.UndefinedValue()
 
@@ -81,9 +79,11 @@ func system(call otto.FunctionCall) otto.Value {
 	var cmdList []string
 
 	arg0 := call.Argument(0)
+	errCb := call.Argument(1)
+	outPutCb := call.Argument(2)
 	iarg0, err := arg0.Export()
 	if err != nil {
-		return otto.UndefinedValue()
+		return jsvm.Callback(errCb, err.Error())
 	}
 
 	switch arg0t := iarg0.(type) {
@@ -92,59 +92,25 @@ func system(call otto.FunctionCall) otto.Value {
 	case string:
 		cmdList = strings.Split(arg0t, " ")
 	default:
-		return otto.UndefinedValue()
+		return jsvm.Callback(errCb, "invalid commandline")
 	}
 
 	cmdLen := len(cmdList)
 	if cmdLen == 0 {
-		panic("no cmd")
+		return jsvm.Callback(errCb, "no cmd")
 	}
 	c := exec.Command(cmdList[0], cmdList[1:]...)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	err = c.Run()
+
+	b, err := c.Output()
 	if err != nil {
-		v, _ := otto.ToValue(err)
-		return v
+		return jsvm.Callback(errCb, err.Error())
 	}
+	if outPutCb.IsFunction() {
+		return jsvm.Callback(outPutCb, string(b))
+	}
+
+	os.Stdout.Write(b)
 	return otto.TrueValue()
-}
-
-func sysOutput(call otto.FunctionCall) otto.Value {
-	var cmdList []string
-
-	arg0 := call.Argument(0)
-	iarg0, err := arg0.Export()
-	if err != nil {
-		v, _ := otto.ToValue("")
-		return v
-	}
-
-	switch arg0t := iarg0.(type) {
-	case []string:
-		cmdList = arg0t
-	case string:
-		cmdList = strings.Split(arg0t, " ")
-	default:
-		v, _ := otto.ToValue("")
-		return v
-	}
-
-	cmdLen := len(cmdList)
-	if cmdLen == 0 {
-		panic("no cmd")
-	}
-	b := new(bytes.Buffer)
-	c := exec.Command(cmdList[0], cmdList[1:]...)
-	c.Stdout = b
-	c.Stderr = b
-	err = c.Run()
-	if err != nil {
-		v, _ := otto.ToValue("")
-		return v
-	}
-	v, _ := otto.ToValue(b.String())
-	return v
 }
 
 //writeFile function writeFile(file,content,flag,errCb,formatter)
@@ -159,10 +125,10 @@ func writeFile(call otto.FunctionCall) otto.Value {
 	formatterCb := call.Argument(4)
 	// callbackArg := call.Argument(2)
 	if !fileArg.IsString() {
-		return callback(errCb, "invalid file name "+fileArg.String())
+		return jsvm.Callback(errCb, "invalid file name "+fileArg.String())
 	}
 	if content.IsUndefined() {
-		return callback(errCb, "content is not provided.")
+		return jsvm.Callback(errCb, "content is not provided.")
 	}
 
 	var flagStr string
@@ -185,52 +151,26 @@ func writeFile(call otto.FunctionCall) otto.Value {
 			newline = "\n"
 		}
 	}
-	f, err := os.OpenFile(fileArg.String(), flag, 0777)
-	if err != nil {
-		return callback(errCb, err.Error())
-	}
-	defer f.Close()
-	formatted, err := cbGetValue(formatterCb, content)
-	if err != nil {
-		return callback(errCb, err.Error())
-	}
-	bytes := []byte(formatted + newline)
+	go func() {
+		f, err := os.OpenFile(fileArg.String(), flag, 0777)
+		if err != nil {
+			jsvm.Callback(errCb, err.Error())
+			return
+		}
+		defer f.Close()
+		formatted, err := jsvm.CbGetValue(formatterCb, content)
+		if err != nil {
+			jsvm.Callback(errCb, err.Error())
+			return
+		}
+		bytes := []byte(formatted + newline)
 
-	_, err = f.Write(bytes)
-	if err != nil {
-		return callback(errCb, err.Error())
-	}
+		_, err = f.Write(bytes)
+		if err != nil {
+			jsvm.Callback(errCb, err.Error())
+			return
+		}
+		jsvm.Callback(errCb, nil)
+	}()
 	return otto.UndefinedValue()
-}
-
-func stringValue(s string) otto.Value {
-	v, _ := otto.ToValue(s)
-	return v
-}
-
-func errorValue(err error) otto.Value {
-	value, _ := otto.ToValue(err)
-	return value
-}
-
-func callback(cb otto.Value, arg interface{}) otto.Value {
-	if cb.Class() != "Function" {
-		return otto.UndefinedValue()
-	}
-	cb.Call(cb, arg)
-	return otto.UndefinedValue()
-
-}
-func cbGetValue(cb otto.Value, arg otto.Value) (string, error) {
-	if cb.IsUndefined() {
-		return arg.String(), nil
-	}
-	if !cb.IsFunction() {
-		return "", errors.New("invalid formatter")
-	}
-	v, err := cb.Call(cb, arg)
-	if err != nil {
-		return "", err
-	}
-	return v.String(), nil
 }
