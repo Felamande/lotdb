@@ -82,6 +82,7 @@ func system(call otto.FunctionCall) otto.Value {
 	errCb := call.Argument(1)
 	outPutCb := call.Argument(2)
 	iarg0, err := arg0.Export()
+
 	if err != nil {
 		return jsvm.Callback(errCb, err.Error())
 	}
@@ -110,7 +111,7 @@ func system(call otto.FunctionCall) otto.Value {
 	}
 
 	os.Stdout.Write(b)
-	return otto.TrueValue()
+	return otto.UndefinedValue()
 }
 
 //writeFile function writeFile(file,content,flag,errCb,formatter)
@@ -173,4 +174,5 @@ func writeFile(call otto.FunctionCall) otto.Value {
 		jsvm.Callback(errCb, nil)
 	}()
 	return otto.UndefinedValue()
+
 }

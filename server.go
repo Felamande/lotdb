@@ -36,6 +36,7 @@ func main() {
 	t := tango.NewWithLog(l)
 
 	t.Use(new(timemw.TimeHandler))
+	t.Use(header.CustomHeaders())
 	t.Use(tango.Static(tango.StaticOptions{
 		RootPath: settings.Get("static.localroot").String("./public"),
 	}))
@@ -57,7 +58,6 @@ func main() {
 		Funcs:       utils.DefaultFuncs(),
 	}))
 	t.Use(events.Events())
-	t.Use(header.CustomHeaders())
 
 	t.Post(query.Url, new(query.QueryRouter))
 	t.Get(page.HomeUrl, new(page.HomeRouter))
