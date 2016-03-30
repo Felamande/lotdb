@@ -4,15 +4,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Felamande/lotdb/settings/jsvm"
+	"github.com/Felamande/jsvm"
 	"github.com/Felamande/otto"
 
 	//module
-	_ "github.com/Felamande/lotdb/settings/jsvm/module/gofunc"
-	_ "github.com/Felamande/lotdb/settings/jsvm/module/math"
-	_ "github.com/Felamande/lotdb/settings/jsvm/module/os"
-	_ "github.com/Felamande/lotdb/settings/jsvm/module/path"
-	_ "github.com/Felamande/lotdb/settings/jsvm/module/str"
+	_ "github.com/Felamande/jsvm/module/gofunc"
+	_ "github.com/Felamande/jsvm/module/math"
+	_ "github.com/Felamande/jsvm/module/os"
+	_ "github.com/Felamande/jsvm/module/path"
+	_ "github.com/Felamande/jsvm/module/str"
 	_ "github.com/robertkrimen/otto/underscore"
 
 	"gopkg.in/fsnotify.v1"
@@ -26,6 +26,7 @@ type result struct {
 }
 
 func Init(file string) {
+
 	jsvm.Run(file)
 }
 
