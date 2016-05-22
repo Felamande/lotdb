@@ -32,9 +32,22 @@
 			-webkit-appearance: none;
 		}
 		[v-cloak]{display: none;}
+		div#modal-show-time{
+			font-size:16px;
+			color: red;
+			font-weight: bold;
+		}
 	</style>
 
 	<div class="container" v-cloak>
+		<modal title="温馨提示" :show.sync="showTime&&showTimeClose" effect="fade">
+			<div slot="modal-body" class="modal-body" id="modal-show-time">
+				已经很晚了，快去睡觉吧。现在的时间是{{now}}
+			</div>
+			<div slot="modal-footer" class="modal-footer">
+						<button type="button" class="btn btn-danger" @click='showTimeClose=false'>好，我马上就去睡觉</button>
+					</div>
+		</modal>
 		<tabset>
 			<tab header="和值">
 				<!--<form action="/query" method="POST" id="query" class="form-horizontal">-->
