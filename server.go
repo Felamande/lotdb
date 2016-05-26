@@ -21,6 +21,7 @@ import (
 	//routers
 	"github.com/Felamande/lotdb/routers/page"
 	"github.com/Felamande/lotdb/routers/query"
+	"github.com/Felamande/lotdb/routers/toolate"
 )
 
 var conf = flag.String("-conf", "./settings/settings.js", "conf file, javascript.")
@@ -61,6 +62,7 @@ func main() {
 
 	t.Post(query.Url, new(query.QueryRouter))
 	t.Get(page.HomeUrl, new(page.HomeRouter))
+	t.Post(toolate.Url, new(toolate.TooLateRouter))
 
 	go settings.MustWatch(*conf)
 

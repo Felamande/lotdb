@@ -69,7 +69,12 @@ window.onload = function() {
 			},
             delAllFilters:function(){
                 this.filters = [{}]
-            }
+            },
+			postClickTooLate:function(){
+				this.$http.post("/toolate", {"clicked":true}, { headers: { "Content-Type": "application/json" } }).then(
+					function(response) {}, function(error) {})
+				this.showTimeClose = false
+			}
 		},
 		computed: {
 			queryParams: function() {
