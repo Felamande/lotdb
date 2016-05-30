@@ -32,18 +32,31 @@
 			-webkit-appearance: none;
 		}
 		[v-cloak]{display: none;}
+		div#modal-show-time{
+			font-size:16px;
+			color: red;
+			font-weight: bold;
+		}
 	</style>
 
 	<div class="container" v-cloak>
+		<modal title="温馨提示" :show.sync="showTime&&showTimeClose" effect="fade">
+			<div slot="modal-body" class="modal-body" id="modal-show-time">
+				已经很晚了，快去睡觉吧。现在的时间是{{now}}
+			</div>
+			<div slot="modal-footer" class="modal-footer">
+						<button type="button" class="btn btn-danger"  @click='postClickTooLate'>好，我马上就去睡觉</button>
+					</div>
+		</modal>
 		<tabset>
 			<tab header="和值">
-				<form action="/query" method="POST" id="query" class="form-horizontal">
+				<!--<form action="/query" method="POST" id="query" class="form-horizontal">-->
 
 					<label id="sum-input-label" for="sum-input" class="control-label">和值为:</label>
 
-					<input class="form-control" v-model="sum" type=number name="sum" id="sum-input" max="{{maxSum}}" min="{{minSum}}" number>
+					<input class="form-control" @keyup.enter="postFilter" v-model="sum" type=number name="sum" id="sum-input" max="{{maxSum}}" min="{{minSum}}" number>
 
-				</form>
+				<!--</form>-->
 				<button id="show-filters" @click="showFilters=true" class="btn btn-primary" style="margin-top:5px;margin-right:10px;">添加数字筛选条件</button>
 				
                 <button id="deleteAllFilters" @click="delAllFilters" class="btn btn-warning" style="margin-top:5px;margin-right:10px;">清除数字筛选条件</button>
@@ -97,15 +110,15 @@
 						<button type="button" class="btn btn-primary" @click='showDeleted=false'>关闭</button>
 					</div>
 				</modal>
-				<modal title="添加筛选条件" :show.sync="showFilters" effect="fade">
+				<modal title="添加筛选条件" @keyup.enter="postFilter" :show.sync="showFilters" effect="fade">
 					<div slot="modal-body" class="modal-body">
-						<form action="/query" method="POST" id="query" class="form-horizontal">
+						<!--<form action="/query" method="POST" id="query" class="form-horizontal">-->
 
 							<label id="sum-input-label" for="sum-input" class="control-label">和值为:</label>
 
 							<input class="form-control" v-model="sum" type=number name="sum" id="sum-input" max="{{maxSum}}" min="{{minSum}}" number>
 
-						</form>
+						<!--</form>-->
 						<label class="control-label" style="margin-top:5px;">筛选数字:</label>
 						<div class="row" v-for="filter in filters" style="margin-top:3px;">
 							<div class="col-md-2 col-xs-2">
