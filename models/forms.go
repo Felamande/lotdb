@@ -5,3 +5,7 @@ type QueryForm struct {
 	Include []int `form:"include" json:"include"`
 	Exclude []int `form:"exclude" json:"exclude"`
 }
+
+type TooLateForm struct {
+	Clicked bool `form:"clicked json:"clicked"`
+}
