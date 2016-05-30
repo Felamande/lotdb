@@ -19,7 +19,8 @@ window.onload = function() {
 			debug: false,
 			rePerPage: 25,
 			curPageIdx: 0,
-			selected: []
+			selected: [],
+			showTimeClose:true
 
 		},
 		components: {
@@ -68,7 +69,12 @@ window.onload = function() {
 			},
             delAllFilters:function(){
                 this.filters = [{}]
-            }
+            },
+			postClickTooLate:function(){
+				this.$http.post("/toolate", {"clicked":true}, { headers: { "Content-Type": "application/json" } }).then(
+					function(response) {}, function(error) {})
+				this.showTimeClose = false
+			}
 		},
 		computed: {
 			queryParams: function() {
@@ -102,7 +108,25 @@ window.onload = function() {
 				var start = this.curPageIdx * 25
 				var end = next * 25
 				return this.results.slice(start, end)
+			},
+			showTime:function(){
+				var d = new Date()
+				var h = d.getHours()
+				var m = d.getMinutes()
+				if (h<=4){
+					if(h>=1&&m>=20){		
+						return true
+					}
+				}
+				return false
+			},
+			now:function(){
+				var d = new Date()
+				var h = d.getHours()
+				var m = d.getMinutes()
+				return h+":"+m
 			}
+			
 		}
 	})
 }
