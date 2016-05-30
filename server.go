@@ -20,6 +20,7 @@ import (
 	//routers
 	"github.com/Felamande/lotdb/routers/page"
 	"github.com/Felamande/lotdb/routers/query"
+	"github.com/Felamande/lotdb/routers/toolate"
 )
 
 func init() {
@@ -57,6 +58,7 @@ func main() {
 
 	t.Post(query.Url, new(query.QueryRouter))
 	t.Get(page.HomeUrl, new(page.HomeRouter))
+	t.Post(toolate.Url, new(toolate.TooLateRouter))
 	if settings.Tls.Use {
 		t.RunTLS(settings.Tls.Cert, settings.Tls.Key, settings.Server.Host)
 	} else {
