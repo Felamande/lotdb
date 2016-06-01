@@ -67,7 +67,7 @@ func main() {
 	go settings.MustWatch(*conf)
 
 	host := settings.Get("server.host").String(":9000")
-	if settings.Get("tls.use").Bool(false) {
+	if settings.Get("tls.enable").Bool(false) {
 		t.RunTLS(settings.Get("tls.cert").String(""), settings.Get("tls.key").String(""), host)
 	} else {
 		t.Run(host)
