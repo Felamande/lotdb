@@ -3,6 +3,7 @@ package settings
 import (
 	"fmt"
 	"io/ioutil"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -49,9 +50,9 @@ type timeCfg struct {
 }
 
 type tlsCfg struct {
-	Use  bool   `toml:"use"`
-	Cert string `toml:"cert"`
-	Key  string `toml:key`
+	Enable bool   `toml:"enable"`
+	Cert   string `toml:"cert"`
+	Key    string `toml:"key"`
 }
 
 type setting struct {
@@ -69,7 +70,7 @@ type setting struct {
 
 var (
 	Folder string
-	IsInit = false
+	// IsInit = false
 
 	//GlobalSettings
 	Static      staticCfg
@@ -93,34 +94,35 @@ func init() {
 
 }
 
+var once sync.Once
+
 func Init(cfgFile string) {
-	settingStruct := setting{}
-	// InitOnce.Do(func() {
-	b, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		panic(err)
-	}
-	if err := toml.Unmarshal(b, &settingStruct); err != nil {
-		panic(err)
-	}
-	settingStruct.Time.Location, err = time.LoadLocation(settingStruct.Time.ZoneString)
-	if err != nil {
-		fmt.Println(err)
-		settingStruct.Time.Location = time.UTC
-	}
+	once.Do(func() {
+		settingStruct := setting{}
+		b, err := ioutil.ReadFile(cfgFile)
+		if err != nil {
+			panic(err)
+		}
+		if err := toml.Unmarshal(b, &settingStruct); err != nil {
+			panic(err)
+		}
+		settingStruct.Time.Location, err = time.LoadLocation(settingStruct.Time.ZoneString)
+		if err != nil {
+			fmt.Println(err)
+			settingStruct.Time.Location = time.UTC
+		}
 
-	Static = settingStruct.Static
-	Server = settingStruct.Server
+		Static = settingStruct.Static
+		Server = settingStruct.Server
 
-	Template = settingStruct.Template
-	DefaultVars = settingStruct.DefaultVars
-	Admin = settingStruct.Admin
-	Log = settingStruct.Log
-	DB = settingStruct.DB
-	Time = settingStruct.Time
-	Headers = settingStruct.Headers
-	TLS = settingStruct.TLS
-	// })
+		Template = settingStruct.Template
+		DefaultVars = settingStruct.DefaultVars
+		Admin = settingStruct.Admin
+		Log = settingStruct.Log
+		DB = settingStruct.DB
+		Time = settingStruct.Time
+		Headers = settingStruct.Headers
+		TLS = settingStruct.TLS
+	})
 
-	IsInit = true
 }
