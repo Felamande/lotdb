@@ -5,6 +5,10 @@ import (
 	"github.com/tango-contrib/renders"
 )
 
+type BaseRouter struct {
+	tango.Ctx
+}
+
 type BaseJSONRouter struct {
 	tango.Json
 	tango.Ctx
