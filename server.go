@@ -18,6 +18,7 @@ import (
 	"github.com/tango-contrib/renders"
 
 	//routers
+	"github.com/Felamande/lotdb/routers/debug"
 	"github.com/Felamande/lotdb/routers/page"
 	"github.com/Felamande/lotdb/routers/query"
 	"github.com/Felamande/lotdb/routers/toolate"
@@ -33,14 +34,10 @@ func main() {
 	t := tango.NewWithLog(l)
 
 	t.Use(new(timemw.TimeHandler))
-	t.Use(tango.Static(tango.StaticOptions{
-		RootPath: settings.Static.LocalRoot,
-	}))
 	t.Use(binding.Bind())
 	t.Use(
 		tango.Recovery(false),
 		tango.Compresses([]string{}),
-		tango.Static(tango.StaticOptions{Prefix: "public"}),
 		tango.Return(),
 		tango.Param(),
 		tango.Contexts(),
@@ -59,6 +56,12 @@ func main() {
 	t.Post(query.Url, new(query.QueryRouter))
 	t.Get(page.HomeUrl, new(page.HomeRouter))
 	t.Post(toolate.Url, new(toolate.TooLateRouter))
+
+	if settings.Debug.Enable {
+		go debug.On(settings.Debug.Port)
+		l.Infof("enable debug at port %d\n", settings.Debug.Port)
+	}
+
 	if settings.TLS.Enable {
 		t.RunTLS(settings.TLS.Cert, settings.TLS.Key, settings.Server.Host)
 	} else {
