@@ -55,6 +55,11 @@ type tlsCfg struct {
 	Key    string `toml:"key"`
 }
 
+type debugCfg struct {
+	Port   int  `toml:"port"`
+	Enable bool `toml:"enable"`
+}
+
 type setting struct {
 	Static      staticCfg         `toml:"static"`
 	Server      serverCfg         `toml:"server"`
@@ -65,6 +70,7 @@ type setting struct {
 	Log         logCfg            `toml:"log"`
 	Time        timeCfg           `toml:"time"`
 	TLS         tlsCfg            `toml:"tls"`
+	Debug       debugCfg          `toml:"debug"`
 	Headers     map[string]string `toml:"headers"`
 }
 
@@ -82,6 +88,7 @@ var (
 	DB          dbCfg
 	TLS         tlsCfg
 	Time        timeCfg
+	Debug       debugCfg
 	Headers     map[string]string
 )
 
@@ -122,6 +129,7 @@ func Init(cfgFile string) {
 		DB = settingStruct.DB
 		Time = settingStruct.Time
 		Headers = settingStruct.Headers
+		Debug = settingStruct.Debug
 		TLS = settingStruct.TLS
 	})
 
