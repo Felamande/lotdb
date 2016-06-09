@@ -4,5 +4,4 @@ god.toml
 settings.toml
 settings_.toml
 tls
-*.js
 lotdb
