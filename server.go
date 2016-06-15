@@ -37,7 +37,6 @@ func main() {
 	t.Use(binding.Bind())
 	t.Use(
 		tango.Recovery(false),
-		tango.Compresses([]string{}),
 		tango.Return(),
 		tango.Param(),
 		tango.Contexts(),
