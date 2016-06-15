@@ -36,6 +36,7 @@ func main() {
 	t.Use(new(timemw.TimeHandler))
 	t.Use(binding.Bind())
 	t.Use(
+		tango.Static(),
 		tango.Recovery(false),
 		tango.Return(),
 		tango.Param(),
