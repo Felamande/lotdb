@@ -8,13 +8,19 @@ import (
 	"github.com/Felamande/lotdb/settings"
 )
 
-func AssetJS(src string) template.HTML {
-	return template.HTML(fmt.Sprintf(`<script src="%s"></script>`, path.Join(settings.Static.VirtualRoot, "js", src)))
+var AssetTpl = map[string]string{
+	"css": `<link rel="stylesheet" href="%s" type="text/css" />`,
+	"js":  `<script src="%s"></script>`,
+}
+
+func AssetLocal(typ, src string) template.HTML {
+
+	return template.HTML(fmt.Sprintf(AssetTpl[typ], path.Join(settings.Static.VirtualRoot, typ, src)))
 	// return path.Join(settings.Static.VirtualRoot, "js", src)
 }
 
-func AssetCss(src string) template.HTML {
-	return template.HTML(fmt.Sprintf(`<link rel="stylesheet" href="%s" type="text/css" />`, path.Join(settings.Static.VirtualRoot, "css", src)))
+func AssetRemote(typ, src string) template.HTML {
+	return template.HTML(fmt.Sprintf(AssetTpl[typ], "https://"+path.Join(settings.Static.RemoteRoot, typ, src)))
 }
 
 func DefaultFuncs() template.FuncMap {
@@ -24,8 +30,8 @@ func DefaultFuncs() template.FuncMap {
 
 	// }
 	return template.FuncMap{
-		"AssetJs":  AssetJS,
-		"AssetCss": AssetCss,
+		"AssetLocal":  AssetLocal,
+		"AssetRemote": AssetRemote,
 		// "CompressCss": s.Css.CompressCss,
 		// "CompressJs":  s.Js.CompressJs,
 	}

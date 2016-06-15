@@ -3,11 +3,11 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>{% .title %}</title>
-    {% AssetCss  "bootstrap.min.css" %}
-    {% AssetCss "base.css?v=20150601" %}
-    {% AssetJs "vue.js" %}
-    {% AssetJs  "vue-strap.min.js" %}
-    {% AssetJs  "vue-resource.js"  %}
-    {% AssetJs  "home.js"%}
+    {% AssetRemote "css" "bootstrap.min.css" %}
+    {% AssetLocal "css" "base.css" %}
+    {% AssetRemote "js" "vue.js" %}
+    {% AssetRemote "js"  "vue-strap.min.js" %}
+    {% AssetRemote "js"  "vue-resource.js"  %}
+    {% AssetLocal "js"  "home.js"%}
     <link rel="shortcut icon" href="/static/img/favicon.ico" />
 </head>

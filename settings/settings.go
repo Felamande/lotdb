@@ -11,6 +11,7 @@ import (
 )
 
 type staticCfg struct {
+	RemoteRoot  string `toml:"remote"`
 	VirtualRoot string `toml:"vstatic"`
 	LocalRoot   string `toml:"lstatic"`
 	CompressDef string `toml:"compress"`
