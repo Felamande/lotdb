@@ -6,3 +6,4 @@ settings_.toml
 tls
 lotdb
 settings.js
+debug
