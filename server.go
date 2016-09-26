@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	"os"
+	"path/filepath"
 
 	"github.com/Felamande/lotdb/settings"
 	"github.com/lunny/tango"
@@ -22,10 +24,19 @@ import (
 	"github.com/Felamande/lotdb/routers/page"
 	"github.com/Felamande/lotdb/routers/query"
 	"github.com/Felamande/lotdb/routers/toolate"
+	"github.com/kardianos/osext"
 )
 
+var conf string
+
 func init() {
-	settings.Init("./settings/settings.toml")
+	folder, err := osext.ExecutableFolder()
+	if err != nil {
+		panic(err)
+	}
+	flag.StringVar(&conf, "conf", filepath.Join(folder, "settings/settings.toml"), "configure file.")
+	flag.Parse()
+	settings.Init(conf)
 }
 
 func main() {
