@@ -10,8 +10,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var defaultQ = new(query)
+
 type query struct {
 	db *gorm.DB
+}
+
+func NewQuery(db *gorm.DB) *query {
+	defaultQ.db = db
+	return defaultQ
 }
 
 func Connect(dialect string, args ...interface{}) (*query, error) {
