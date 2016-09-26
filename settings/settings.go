@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Maxgis/tree"
 	"github.com/kardianos/osext"
 )
 
@@ -132,6 +133,7 @@ func Init(cfgFile string) {
 		Headers = settingStruct.Headers
 		Debug = settingStruct.Debug
 		TLS = settingStruct.TLS
+		tree.Print(settingStruct)
 	})
 
 }
