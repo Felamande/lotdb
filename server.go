@@ -24,7 +24,7 @@ import (
 	"github.com/Felamande/lotdb/routers/toolate"
 )
 
-var conf = flag.String("-conf", "./settings/settings.js", "conf file, javascript.")
+var conf = flag.String("conf", "./settings/settings.js", "conf file, javascript.")
 
 func init() {
 	flag.Parse()
